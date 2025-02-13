@@ -1,5 +1,5 @@
 body {
-    background-image: url('/public/img/background.jpg');
+    background-image: url('../img/background.jpg');
     background-size: cover;  /* Esto asegura que la imagen cubra todo el fondo */
     background-position: center;  /* Esto centra la imagen */
     background-attachment: fixed;  /* Esto mantiene la imagen fija al hacer scroll */
