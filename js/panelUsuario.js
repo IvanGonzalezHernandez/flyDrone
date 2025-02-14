@@ -4,7 +4,7 @@ export function crearPanelUsuario() {
     try {
         // Cambiar el CSS dinámicamente
         let linkCss = document.getElementById("css");
-        linkCss.href = "../css/panelUsuarios.css";
+        linkCss.href = "./css/panelUsuarios.css";
 
         // Crear el contenedor principal del panel con clases de Bootstrap
         let panelUsuario = document.createElement('div');
@@ -20,7 +20,7 @@ export function crearPanelUsuario() {
 
         // Agregar el logo (Bootstrap img-fluid para que sea responsive)
         let logo = document.createElement('img');
-        logo.src = '../img/logoSinFondo.png';
+        logo.src = './img/logoSinFondo.png';
         logo.classList.add('img-fluid');
 
         // Crear un contenedor para mostrar el mensaje de viabilidad
