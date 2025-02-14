@@ -61,18 +61,20 @@ export function crearPanelUsuario() {
         // Crear el panel para la detección de objetos
         let panelTensor = document.createElement('div');
 
+
         // H2
         let h2 = document.createElement('h2');
         h2.textContent = "Detección de objetos en el vuelo del dron";
         panelTensor.appendChild(h2);
 
-        //Video
+        
+        // Video
         let video = document.createElement('video');
         video.id = 'video';
-        video.width = 640;
-        video.height = 480;
+        video.classList.add('img-fluid'); // Agrega esta clase para hacerlo responsivo
         video.autoplay = true;
         panelTensor.appendChild(video);
+
 
         //Boton iniciar
         let botonIniciar = document.createElement('button');
