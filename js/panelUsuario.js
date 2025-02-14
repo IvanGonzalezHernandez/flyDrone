@@ -67,7 +67,7 @@ export function crearPanelUsuario() {
         h2.textContent = "Detección de objetos en el vuelo del dron";
         panelTensor.appendChild(h2);
 
-        
+
         // Video
         let video = document.createElement('video');
         video.id = 'video';
@@ -147,87 +147,91 @@ export function crearPanelUsuario() {
     let model; // Variable que almacenará el modelo cargado de MobileNet
     let videoStream; // Variable que almacenará el stream de video de la cámara
     let detecting = false; // Variable que controla si la detección está activa o no
-    
+
     // Función para iniciar la detección
     async function startDetection() {
-        const video = document.getElementById('video');
-    
+        const video = document.getElementById('video'); // Obtiene el elemento <video> del DOM
+
         // Verifica si ya hay un stream activo y se detiene antes de iniciar otro
         if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
+            videoStream.getTracks().forEach(track => track.stop()); // Detiene el stream anterior si existe
         }
-    
+
         // Detectar si el usuario está en un dispositivo móvil
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-        let constraints = { video: true };
-    
+
+        let constraints = { video: true }; // Configuración básica para solicitar el acceso a la cámara
+
         if (isMobile) {
-            const useFrontCamera = confirm("¿Quieres usar la cámara frontal?");
-            constraints.video = { facingMode: useFrontCamera ? "user" : "environment" };
+            // Si es un dispositivo móvil, pregunta al usuario si quiere usar la cámara frontal o posterior
+            const useFrontCamera = confirm("¿Quieres usar la cámara frontal? Si quieres usar la cámara posterior cancela el mensaje");
+            constraints.video = { facingMode: useFrontCamera ? "user" : "environment" }; // Establece la cámara según la respuesta
         }
-    
+
         // Solicita acceso a la cámara con la configuración elegida
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = videoStream;
-    
-        // Esperar a que el video realmente empiece a reproducirse
+        video.srcObject = videoStream; // Asocia el stream de video al elemento <video>
+
+        // Espera a que el video realmente empiece a reproducirse
         video.onloadedmetadata = async () => {
-            await video.play();
-    
-            // Cargar el modelo MobileNet si aún no está cargado
+            await video.play(); // Inicia la reproducción del video
+
+            // Carga el modelo MobileNet si aún no está cargado
             if (!model) {
-                model = await mobilenet.load();
-                console.log("Modelo MobileNet cargado");
+                model = await mobilenet.load(); // Carga el modelo MobileNet
+                console.log("Modelo MobileNet cargado"); // Imprime en consola cuando el modelo esté listo
             }
-    
-            // Inicializa DataTable
+
+            // Inicializa DataTable para mostrar las predicciones
             $('#predictionTable').DataTable({
-                "destroy": true,
-                "paging": false,
-                "scrollY": "400px",
-                "scrollCollapse": true,
-                "info": false,
-                "searching": false
+                "destroy": true, // Destruye la tabla existente si ya había una
+                "paging": false, // Desactiva la paginación
+                "scrollY": "400px", // Establece el alto de la tabla con desplazamiento vertical
+                "scrollCollapse": true, // Permite que la tabla se ajuste si hay pocos datos
+                "info": false, // Desactiva la información de la tabla (como el número de elementos)
+                "searching": false // Desactiva la barra de búsqueda
             });
-    
-            detecting = true;
-            detectFrame(video);
+
+            detecting = true; // Activa el estado de detección
+            detectFrame(video); // Comienza la detección de objetos
         };
     }
-    
+
     // Función para detener la detección
     function stopDetection() {
-        const video = document.getElementById('video');
+        const video = document.getElementById('video'); // Obtiene el elemento <video>
         if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
+            videoStream.getTracks().forEach(track => track.stop()); // Detiene todos los tracks del stream
         }
-        detecting = false;
+        detecting = false; // Desactiva el estado de detección
     }
-    
+
     // Función para detectar objetos en cada fotograma
     async function detectFrame(video) {
-        if (!detecting) return;
-    
-        const predictions = await model.classify(video);
-        updateTable(predictions);
-    
+        if (!detecting) return; // Si la detección no está activa, no hace nada
+
+        const predictions = await model.classify(video); // Clasifica el contenido del video usando el modelo MobileNet
+        updateTable(predictions); // Actualiza la tabla con las predicciones obtenidas
+
+        // Solicita el siguiente fotograma para mantener la detección en tiempo real
         requestAnimationFrame(() => detectFrame(video));
     }
-    
+
     // Función para actualizar la tabla con los resultados de la predicción
     function updateTable(predictions) {
-        const table = $('#predictionTable').DataTable();
-        table.clear();
-    
+        const table = $('#predictionTable').DataTable(); // Obtiene la instancia de DataTable
+        table.clear(); // Limpia la tabla
+
         predictions.forEach(prediction => {
+            // Añade las predicciones a la tabla: clase y probabilidad formateada como porcentaje
             table.row.add([
-                prediction.className,
-                (prediction.probability * 100).toFixed(2) + '%'
-            ]).draw();
+                prediction.className, // Nombre de la clase detectada
+                (prediction.probability * 100).toFixed(2) + '%' // Probabilidad formateada como porcentaje
+            ]).draw(); // Dibuja la nueva fila en la tabla
         });
     }
-    
+
+
 
 
 
