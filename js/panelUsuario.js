@@ -67,7 +67,7 @@ export function crearPanelUsuario() {
         h2.textContent = "Detección de objetos en el vuelo del dron";
         panelTensor.appendChild(h2);
 
-        
+
         // Video
         let video = document.createElement('video');
         video.id = 'video';
@@ -152,23 +152,33 @@ export function crearPanelUsuario() {
     async function startDetection() {
         const video = document.getElementById('video');
 
-        // Verifica si ya hay un stream activo y se detiene antes de inciar otro
+        // Verifica si ya hay un stream activo y se detiene antes de iniciar otro
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
 
-        // Solicita acceso a la cámara
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: true }); // Esperamos a que el usuario de permisos
-        video.srcObject = videoStream; //Asigna ese flujo al <video>
+        // Detectar si el usuario está en un dispositivo móvil
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        let constraints = { video: true };
+
+        if (isMobile) {
+            const useFrontCamera = confirm("¿Quieres usar la cámara frontal?");
+            constraints.video = { facingMode: useFrontCamera ? "user" : "environment" };
+        }
+
+        // Solicita acceso a la cámara con la configuración elegida
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = videoStream;
 
         // Esperar a que el video realmente empiece a reproducirse
         video.onloadedmetadata = async () => {
-            await video.play(); // Asegura que el video comience
+            await video.play();
 
             // Cargar el modelo MobileNet si aún no está cargado
             if (!model) {
                 model = await mobilenet.load();
-                console.log("Modelo MobileNet cargado"); //Una vez se carga depuramos con un mensaje
+                console.log("Modelo MobileNet cargado");
             }
 
             // Inicializa DataTable
@@ -182,43 +192,42 @@ export function crearPanelUsuario() {
             });
 
             detecting = true;
-            detectFrame(video); // Inicia la detección inmediatamente
+            detectFrame(video);
         };
     }
 
-
     // Función para detener la detección
     function stopDetection() {
-        const video = document.getElementById('video'); // Obtiene el elemento video del DOM
-        videoStream.getTracks().forEach(track => track.stop()); // Detiene todos los tracks del video (detiene la cámara)
-        detecting = false; // Cambia el estado de detección a falso
+        const video = document.getElementById('video');
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+        detecting = false;
     }
 
     // Función para detectar objetos en cada fotograma
     async function detectFrame(video) {
-        if (!detecting) return; // Si no estamos detectando, la función se detiene inmediatamente
+        if (!detecting) return;
 
-        // Llama al modelo para clasificar el fotograma del video de forma asincrónica
-        const predictions = await model.classify(video); // `await` hace que la ejecución espere a que se obtengan las predicciones
-        updateTable(predictions); // Actualiza la tabla con las predicciones obtenidas
+        const predictions = await model.classify(video);
+        updateTable(predictions);
 
-        // Llama nuevamente a la función `detectFrame` después de un pequeño retraso (aproximadamente 100ms)
-        requestAnimationFrame(() => detectFrame(video)); // `requestAnimationFrame` asegura que la función se llame de manera continua
+        requestAnimationFrame(() => detectFrame(video));
     }
 
     // Función para actualizar la tabla con los resultados de la predicción
     function updateTable(predictions) {
-        const table = $('#predictionTable').DataTable(); // Obtiene la tabla de predicciones del DOM
-        table.clear(); // Limpia la tabla antes de agregar nuevos resultados
+        const table = $('#predictionTable').DataTable();
+        table.clear();
 
-        // Añade nuevas filas con los objetos detectados en cada predicción
         predictions.forEach(prediction => {
             table.row.add([
-                prediction.className,  // Nombre del objeto detectado
-                (prediction.probability * 100).toFixed(2) + '%'  // Probabilidad de la predicción (formateado a porcentaje)
-            ]).draw(); // Añade la fila a la tabla y la dibuja
+                prediction.className,
+                (prediction.probability * 100).toFixed(2) + '%'
+            ]).draw();
         });
     }
+
 
 
 
