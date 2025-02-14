@@ -67,7 +67,7 @@ export function crearPanelUsuario() {
         h2.textContent = "Detección de objetos en el vuelo del dron";
         panelTensor.appendChild(h2);
 
-
+        
         // Video
         let video = document.createElement('video');
         video.id = 'video';
@@ -147,40 +147,40 @@ export function crearPanelUsuario() {
     let model; // Variable que almacenará el modelo cargado de MobileNet
     let videoStream; // Variable que almacenará el stream de video de la cámara
     let detecting = false; // Variable que controla si la detección está activa o no
-
+    
     // Función para iniciar la detección
     async function startDetection() {
         const video = document.getElementById('video');
-
+    
         // Verifica si ya hay un stream activo y se detiene antes de iniciar otro
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
         }
-
+    
         // Detectar si el usuario está en un dispositivo móvil
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
+    
         let constraints = { video: true };
-
+    
         if (isMobile) {
             const useFrontCamera = confirm("¿Quieres usar la cámara frontal?");
             constraints.video = { facingMode: useFrontCamera ? "user" : "environment" };
         }
-
+    
         // Solicita acceso a la cámara con la configuración elegida
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = videoStream;
-
+    
         // Esperar a que el video realmente empiece a reproducirse
         video.onloadedmetadata = async () => {
             await video.play();
-
+    
             // Cargar el modelo MobileNet si aún no está cargado
             if (!model) {
                 model = await mobilenet.load();
                 console.log("Modelo MobileNet cargado");
             }
-
+    
             // Inicializa DataTable
             $('#predictionTable').DataTable({
                 "destroy": true,
@@ -190,12 +190,12 @@ export function crearPanelUsuario() {
                 "info": false,
                 "searching": false
             });
-
+    
             detecting = true;
             detectFrame(video);
         };
     }
-
+    
     // Función para detener la detección
     function stopDetection() {
         const video = document.getElementById('video');
@@ -204,22 +204,22 @@ export function crearPanelUsuario() {
         }
         detecting = false;
     }
-
+    
     // Función para detectar objetos en cada fotograma
     async function detectFrame(video) {
         if (!detecting) return;
-
+    
         const predictions = await model.classify(video);
         updateTable(predictions);
-
+    
         requestAnimationFrame(() => detectFrame(video));
     }
-
+    
     // Función para actualizar la tabla con los resultados de la predicción
     function updateTable(predictions) {
         const table = $('#predictionTable').DataTable();
         table.clear();
-
+    
         predictions.forEach(prediction => {
             table.row.add([
                 prediction.className,
@@ -227,7 +227,7 @@ export function crearPanelUsuario() {
             ]).draw();
         });
     }
-
+    
 
 
 
